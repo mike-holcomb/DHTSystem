@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -29,9 +30,11 @@ import javax.json.JsonReader;
 
 class RequestRouter extends Thread {
     private Socket socket;
+    private RequestMap map;
     
-    public RequestRouter(Socket socket) {
+    public RequestRouter(Socket socket, RequestMap map) {
         this.socket = socket;
+        this.map = map;
         System.out.println("Opening request router...");
     }
     
@@ -62,6 +65,8 @@ class RequestRouter extends Thread {
                 
                 System.out.println(to + " received command to " + method + " from " + from + " with parameters " + params.toString());
                 
+                map.Execute(method, params.toString());
+                
                 String response = "{\"from\":\"" + to + "\",\"to\":\"" + from + "\", \"response\": \"OK\"}";
                 socket.getOutputStream().write(response.getBytes());
             }
@@ -86,11 +91,39 @@ class RequestRouter extends Thread {
     }
 }
 
+abstract class Method {
+	public void run(String params) {};
+}
+
+class WriteMethod extends Method
+{
+	@Override
+	public void run(String params)
+	{
+		System.out.println("WRITE: Params provided were: " + params);
+	}
+	
+}
+
+class RequestMap {
+	HashMap<String, Method> map;
+	public RequestMap() {
+		map = new HashMap<>();
+		map.put("write", new WriteMethod());
+	}
+	
+	public void Execute(String methodName, String params)
+	{
+		Method method = map.get(methodName);
+		method.run(params);
+	}
+}
 
 public class JSONRouter {
 	public static void main(String args[])
 	{
 		int PORT = 9000;
+		RequestMap map = new RequestMap();
 		System.out.println("==== Base JSON Server =====\n");
 
 		// Adapted from http://cs.lmu.edu/~ray/notes/javanetexamples/
@@ -98,7 +131,7 @@ public class JSONRouter {
 			System.out.println("Listening on port: " + Integer.toString(PORT));
 			while(true) {
 				Socket socket = listener.accept();
-				new RequestRouter(socket).start();
+				new RequestRouter(socket, map).start();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
