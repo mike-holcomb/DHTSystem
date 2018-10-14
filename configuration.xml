@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<cloud_computing>
+<DHT1>
+<physical_nodes value="8"/>
+<phisical_weight value="5 6 3 4 5 6 7 8"/>
+<virtual_weight value = "1"/>
+<initial_table value = "ring"/>
+<replication_level value = "3"/>
+</DHT1>
+<DHT2>
+</DHT2>
+<DHT3>
+</DHT3>
+</cloud_computing>
